@@ -3,6 +3,7 @@
 import time
 import json
 import argparse
+import sys
 
 import numpy as np
 import mxnet as mx
@@ -36,12 +37,14 @@ elif isinstance(config['ctx'], int):
 
 loaders = []
 true_values = []
+# signal_matrix's shape: (26208, 358, 1)
 for idx, (x, y) in enumerate(generate_data(graph_signal_matrix_filename)):
     if args.test:
         x = x[: 100]
         y = y[: 100]
+    # print(x.shape)
+    # print(y.shape)
     y = y.squeeze(axis=-1)
-    print(x.shape, y.shape)
     loaders.append(
         mx.io.NDArrayIter(
             x, y if idx == 0 else None,

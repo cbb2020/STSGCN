@@ -3,6 +3,7 @@
 import os
 import numpy as np
 import mxnet as mx
+import sys
 
 
 def construct_model(config):
@@ -27,6 +28,7 @@ def construct_model(config):
 
     adj = get_adjacency_matrix(adj_filename, num_of_vertices,
                                id_filename=id_filename)
+    # print('adj.shape: ', adj.shape)
     adj_mx = construct_adj(adj, 3)
     print("The shape of localized adjacency matrix: {}".format(
         adj_mx.shape), flush=True)
@@ -176,6 +178,8 @@ def generate_from_data(data, length, transformer):
                          (train_line, val_line),
                          (val_line, length)):
         x, y = generate_seq(data['data'][line1: line2], 12, 12)
+        print('x.shape: ', x.shape)
+        print('y.shape: ', y.shape)
         if transformer:
             x = transformer(x)
             y = transformer(y)
@@ -183,6 +187,8 @@ def generate_from_data(data, length, transformer):
             mean = x.mean()
         if std is None:
             std = x.std()
+        x_t = (x - mean) / std
+        # print('x_t: ', x_t[0, 0])
         yield (x - mean) / std, y
 
 
@@ -204,10 +210,21 @@ def generate_data(graph_signal_matrix_filename, transformer=None):
 
 
 def generate_seq(data, train_length, pred_length):
+    """
+    Take a sequence of 24 consecutive time points in the form of a sliding window, and then split each sequence, each with 12
+    as train dataset and test dataset
+    """
+    # print('train_length: ', train_length)
+    # print('pred_length: ', pred_length)
+    # print('data.shape: ', data.shape)
+    # print(data[0])
     seq = np.concatenate([np.expand_dims(
         data[i: i + train_length + pred_length], 0)
         for i in range(data.shape[0] - train_length - pred_length + 1)],
         axis=0)[:, :, :, 0: 1]
+    # print('seq.shape: ', seq.shape)
+    # print('range: ', data.shape[0] - train_length - pred_length + 1)
+    # print(seq[0])
     return np.split(seq, 2, axis=1)
 
 
